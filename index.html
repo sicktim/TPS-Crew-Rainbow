@@ -1,1 +1,649 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPS Crew Rainbow</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+ 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+ 
+        .container {
+            padding: 20px;
+            max-width: 100%;
+        }
+ 
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+ 
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+ 
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+ 
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+ 
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+ 
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+ 
+        .filter-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+ 
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+ 
+        .gantt-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            overflow: auto;
+            min-height: 500px;
+        }
+ 
+        .gantt-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            min-width: 100%;
+        }
+ 
+        .gantt-sidebar {
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+ 
+        .gantt-timeline {
+            overflow-x: auto;
+        }
+ 
+        .timeline-header {
+            display: flex;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+ 
+        .day-column {
+            min-width: 200px;
+            padding: 10px;
+            text-align: center;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            font-weight: 600;
+        }
+ 
+        .day-column.today {
+            background: rgba(59, 130, 246, 0.2);
+        }
+ 
+        .class-group {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+ 
+        .class-header {
+            background: rgba(139, 92, 246, 0.3);
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+ 
+        .person-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 50px;
+        }
+ 
+        .person-name {
+            padding: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+ 
+        .person-timeline {
+            display: flex;
+            position: relative;
+            min-height: 50px;
+        }
+ 
+        .day-slot {
+            min-width: 200px;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            padding: 4px;
+        }
+ 
+        .event-block {
+            background: rgba(59, 130, 246, 0.8);
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 2px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid #3b82f6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+ 
+        .event-block:hover {
+            transform: scale(1.02);
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+ 
+        .event-block.flying {
+            background: rgba(34, 197, 94, 0.8);
+            border-left-color: #22c55e;
+        }
+ 
+        .event-block.ground {
+            background: rgba(249, 115, 22, 0.8);
+            border-left-color: #f97316;
+        }
+ 
+        .event-block.supervision {
+            background: rgba(139, 92, 246, 0.8);
+            border-left-color: #8b5cf6;
+        }
+ 
+        .event-block.na {
+            background: rgba(239, 68, 68, 0.8);
+            border-left-color: #ef4444;
+        }
+ 
+        .event-block.academics {
+            background: rgba(59, 130, 246, 0.8);
+            border-left-color: #3b82f6;
+        }
+ 
+        .event-block.cancelled {
+            opacity: 0.5;
+            border-left-style: dashed;
+        }
+ 
+        .event-block.past {
+            opacity: 0.6;
+        }
+ 
+        .event-block.past.effective::after {
+            content: '✓';
+            margin-left: 4px;
+            color: #22c55e;
+        }
+ 
+        .event-block.past.partial::after {
+            content: '◐';
+            margin-left: 4px;
+            color: #f97316;
+        }
+ 
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+ 
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+ 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+ 
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+ 
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+ 
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+ 
+        .modal-section {
+            margin-bottom: 12px;
+        }
+ 
+        .modal-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+ 
+        .modal-value {
+            font-size: 14px;
+            color: white;
+        }
+ 
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+ 
+        .status-badge.cancelled {
+            background: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+ 
+        .status-badge.partial {
+            background: rgba(249, 115, 22, 0.3);
+            color: #f97316;
+        }
+ 
+        .status-badge.effective {
+            background: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+ 
+        .legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 11px;
+        }
+ 
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+ 
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border-left: 3px solid;
+        }
+ 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 14px;
+            color: #9ca3af;
+        }
+ 
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+ 
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+ 
+        // Mock data - will be replaced with API call
+        const MOCK_DATA = {
+            people: [
+                { name: 'Vantiger', class: 'Alpha', type: 'student' },
+                { name: 'Payne', class: 'Bravo', type: 'student' },
+                { name: 'Sick', class: 'Alpha', type: 'student' },
+                { name: 'Coleman', class: 'Staff IP', type: 'staff' },
+                { name: 'Lovell', class: 'Staff IP', type: 'staff' },
+                { name: 'Strafaccia', class: 'Staff IP', type: 'staff' },
+            ],
+            events: [
+                { person: 'Vantiger', date: '2025-12-15', type: 'flying', title: 'T-38 - CCEP', time: '07:00', details: { brief: '07:00', etd: '11:30', eta: '12:30', end: '13:30', crew: ['Vantiger', 'Fogle', 'F'] }, cancelled: false, effective: null },
+                { person: 'Vantiger', date: '2025-12-15', type: 'supervision', title: 'OS', time: '07:15', details: { duty: 'OS', poc: 'Vantiger', start: '07:15', end: '12:00' }, cancelled: false, effective: null },
+                { person: 'Vantiger', date: '2025-12-15', type: 'ground', title: 'F-16 Academics', time: '08:00', details: { event: 'F-16 Academics', start: '08:00', end: '10:00', people: ['Vantiger', 'Payne', 'Any available ROKAF'] }, cancelled: false, effective: null },
+                { person: 'Vantiger', date: '2025-12-17', type: 'flying', title: 'KC-46 - PERF PRAC EXAM', time: '06:40', details: { brief: '06:40', etd: '09:00', eta: '11:00', end: '13:00', crew: ['Daugherty', 'Dockum', 'T', 'Ehler', 'A', 'Vantiger', 'McCafferty'] }, cancelled: false, effective: null },
+                { person: 'Payne', date: '2025-12-15', type: 'ground', title: 'F-16 Academics', time: '08:00', details: { event: 'F-16 Academics', start: '08:00', end: '10:00', people: ['Vantiger', 'Payne'] }, cancelled: false, effective: null },
+                { person: 'Coleman', date: '2025-12-15', type: 'supervision', title: 'SOF', time: '12:00', details: { duty: 'SOF', poc: 'Coleman', start: '12:00', end: '16:30' }, cancelled: false, effective: null },
+            ],
+            days: ['2025-12-15', '2025-12-16', '2025-12-17', '2025-12-18', '2025-12-19']
+        };
+ 
+        function App() {
+            const [data, setData] = useState(MOCK_DATA);
+            const [selectedEvent, setSelectedEvent] = useState(null);
+            const [filters, setFilters] = useState({
+                classes: ['Alpha', 'Bravo', 'Alpha STC', 'Bravo STC', 'Staff IP', 'Staff IFTE/ICSO', 'Attached/Support'],
+                showCancelled: true
+            });
+ 
+            const classGroups = [
+                { name: 'Alpha', classes: ['Alpha'] },
+                { name: 'Bravo', classes: ['Bravo'] },
+                { name: 'Alpha STC', classes: ['Alpha STC'] },
+                { name: 'Bravo STC', classes: ['Bravo STC'] },
+                { name: 'Staff IP', classes: ['Staff IP'] },
+                { name: 'Staff IFTE/ICSO', classes: ['Staff IFTE/ICSO'] },
+                { name: 'Attached/Support', classes: ['Attached/Support'] }
+            ];
+ 
+            const toggleClass = (className) => {
+                setFilters(prev => ({
+                    ...prev,
+                    classes: prev.classes.includes(className)
+                        ? prev.classes.filter(c => c !== className)
+                        : [...prev.classes, className]
+                }));
+            };
+ 
+            const filteredPeople = useMemo(() => {
+                return data.people.filter(person => filters.classes.includes(person.class));
+            }, [data.people, filters.classes]);
+ 
+            const filteredEvents = useMemo(() => {
+                let events = data.events.filter(event => {
+                    const person = data.people.find(p => p.name === event.person);
+                    return person && filters.classes.includes(person.class);
+                });
+ 
+                if (!filters.showCancelled) {
+                    events = events.filter(e => !e.cancelled);
+                }
+ 
+                return events;
+            }, [data.events, data.people, filters]);
+ 
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${days[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}`;
+            };
+ 
+            const isToday = (dateStr) => {
+                const today = new Date().toISOString().split('T')[0];
+                return dateStr === today;
+            };
+ 
+            const getEventsForPersonAndDay = (personName, date) => {
+                return filteredEvents.filter(e => e.person === personName && e.date === date);
+            };
+ 
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🌈 TPS Crew Rainbow</h1>
+ 
+                        <div className="filters">
+                            <div className="filter-group">
+                                <span style={{ fontSize: '12px', color: '#9ca3af' }}>Classes:</span>
+                                {classGroups.map(group => (
+                                    <button
+                                        key={group.name}
+                                        className={`filter-btn ${filters.classes.includes(group.name) ? 'active' : ''}`}
+                                        onClick={() => toggleClass(group.name)}
+                                    >
+                                        {group.name}
+                                    </button>
+                                ))}
+                            </div>
+ 
+                            <div className="filter-group">
+                                <label className="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={filters.showCancelled}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, showCancelled: e.target.checked }))}
+                                    />
+                                    Show Cancelled
+                                </label>
+                            </div>
+                        </div>
+ 
+                        <div className="legend">
+                            <div className="legend-item">
+                                <div className="legend-color flying" style={{ background: 'rgba(34, 197, 94, 0.8)', borderLeftColor: '#22c55e' }}></div>
+                                <span>Flying</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-color ground" style={{ background: 'rgba(249, 115, 22, 0.8)', borderLeftColor: '#f97316' }}></div>
+                                <span>Ground</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-color supervision" style={{ background: 'rgba(139, 92, 246, 0.8)', borderLeftColor: '#8b5cf6' }}></div>
+                                <span>Supervision</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-color academics" style={{ background: 'rgba(59, 130, 246, 0.8)', borderLeftColor: '#3b82f6' }}></div>
+                                <span>Academics</span>
+                            </div>
+                            <div className="legend-item">
+                                <div className="legend-color na" style={{ background: 'rgba(239, 68, 68, 0.8)', borderLeftColor: '#ef4444' }}></div>
+                                <span>NA</span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div className="gantt-container">
+                        <div className="timeline-header">
+                            <div style={{ minWidth: '150px', padding: '10px', background: 'rgba(0,0,0,0.4)', fontWeight: '600' }}>
+                                Person
+                            </div>
+                            {data.days.map(day => (
+                                <div key={day} className={`day-column ${isToday(day) ? 'today' : ''}`}>
+                                    {formatDate(day)}
+                                </div>
+                            ))}
+                        </div>
+ 
+                        {classGroups.map(group => {
+                            const groupPeople = filteredPeople.filter(p => p.class === group.name);
+                            if (groupPeople.length === 0) return null;
+ 
+                            return (
+                                <div key={group.name} className="class-group">
+                                    <div className="class-header">{group.name}</div>
+                                    {groupPeople.map(person => (
+                                        <div key={person.name} className="person-row">
+                                            <div className="person-name">{person.name}</div>
+                                            <div className="person-timeline">
+                                                {data.days.map(day => (
+                                                    <div key={day} className="day-slot">
+                                                        {getEventsForPersonAndDay(person.name, day).map((event, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className={`event-block ${event.type} ${event.cancelled ? 'cancelled' : ''} ${event.effective !== null ? 'past' : ''} ${event.effective === true ? 'effective' : event.effective === false ? 'partial' : ''}`}
+                                                                onClick={() => setSelectedEvent(event)}
+                                                                title={event.title}
+                                                            >
+                                                                {event.time} {event.title}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })}
+                    </div>
+ 
+                    {selectedEvent && (
+                        <div className="modal" onClick={() => setSelectedEvent(null)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <div className="modal-title">{selectedEvent.title}</div>
+                                    <button className="close-btn" onClick={() => setSelectedEvent(null)}>×</button>
+                                </div>
+ 
+                                <div className="modal-section">
+                                    <div className="modal-label">Person</div>
+                                    <div className="modal-value">{selectedEvent.person}</div>
+                                </div>
+ 
+                                <div className="modal-section">
+                                    <div className="modal-label">Date</div>
+                                    <div className="modal-value">{formatDate(selectedEvent.date)}</div>
+                                </div>
+ 
+                                <div className="modal-section">
+                                    <div className="modal-label">Type</div>
+                                    <div className="modal-value">
+                                        <span className={`status-badge ${selectedEvent.type}`}>
+                                            {selectedEvent.type.toUpperCase()}
+                                        </span>
+                                        {selectedEvent.cancelled && <span className="status-badge cancelled">CANCELLED</span>}
+                                        {selectedEvent.effective === true && <span className="status-badge effective">EFFECTIVE</span>}
+                                        {selectedEvent.effective === false && <span className="status-badge partial">PARTIAL</span>}
+                                    </div>
+                                </div>
+ 
+                                {selectedEvent.type === 'flying' && (
+                                    <>
+                                        <div className="modal-section">
+                                            <div className="modal-label">Timeline</div>
+                                            <div className="modal-value">
+                                                Brief: {selectedEvent.details.brief} → ETD: {selectedEvent.details.etd} → ETA: {selectedEvent.details.eta} → End: {selectedEvent.details.end}
+                                            </div>
+                                        </div>
+                                        {selectedEvent.details.crew && (
+                                            <div className="modal-section">
+                                                <div className="modal-label">Crew</div>
+                                                <div className="modal-value">{selectedEvent.details.crew.join(' • ')}</div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+ 
+                                {selectedEvent.type === 'ground' && selectedEvent.details.people && (
+                                    <div className="modal-section">
+                                        <div className="modal-label">People</div>
+                                        <div className="modal-value">{selectedEvent.details.people.join(' • ')}</div>
+                                    </div>
+                                )}
+ 
+                                {selectedEvent.type === 'supervision' && (
+                                    <>
+                                        <div className="modal-section">
+                                            <div className="modal-label">Duty</div>
+                                            <div className="modal-value">{selectedEvent.details.duty}</div>
+                                        </div>
+                                        <div className="modal-section">
+                                            <div className="modal-label">POC</div>
+                                            <div className="modal-value">{selectedEvent.details.poc}</div>
+                                        </div>
+                                        <div className="modal-section">
+                                            <div className="modal-label">Time</div>
+                                            <div className="modal-value">{selectedEvent.details.start} - {selectedEvent.details.end}</div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+ 
+                    <div className="footer">
+                        <p>v1.0 • Built: 2025-12-25 04:15</p>
+                    </div>
+                </div>
+            );
+        }
+ 
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
